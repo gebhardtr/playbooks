@@ -1,0 +1,28 @@
+- name: test
+  hosts: all
+  ignore_errors: yes
+  tasks:
+    - name: create user
+      command: "useradd awx"
+      register: useradd 
+    - name: install podman
+      command: "microdnf -y install podman curl"
+      register: install 
+    - name: list job artifacts
+      command: "bash -c 'for i in {1..60}; do ls -lR /runner; sleep 1; done'"
+      register: list
+    - name: read filesystem
+      command: "cat /etc/receptor/receptor.conf"
+      register: fs
+    - name: run podman
+      command: "su -c 'cd && podman container ps -a' awx"
+      register: podman
+    - name: external
+      command: "curl -sLo /dev/null -I -w \"%{http_code}\" https://google.com"
+      register: curl 
+    - debug: msg="{{ useradd.stdout_lines }}"
+    - debug: msg="{{ install.stdout_lines }}"
+    - debug: msg="{{ podman.stdout_lines }}"
+    - debug: msg="{{ list.stdout_lines }}"
+    - debug: msg="{{ fs.stdout_lines }}"
+    - debug: msg="{{ curl.stdout_lines }}"
